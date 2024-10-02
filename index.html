@@ -37,12 +37,19 @@
             margin-bottom: 8.5px;
         }
 
+       .topic {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 50px;  /* Rounded circle button */
+            font-size: 1em;
+            text-align: center;  /* Center text inside the circle */
+            transition: transform 0.3s, background 0.3s;
+            cursor: pointer;
+        }
+
         .topic a {
-            color: inherit;  /* Inherit the color of the parent element */
-            text-decoration: none;  /* Remove the underline */
-            display: block;  /* Make the link fill the entire topic box */
-            width: 100%;
-            height: 100%;
+            color: inherit;
+            text-decoration: none;
         }
 
         .topic:hover {
