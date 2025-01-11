@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Syllabus Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f9fc;
+    }
+
+    header {
+      background: #4caf50;
+      color: white;
+      text-align: center;
+      padding: 15px 0;
+    }
+
+    h1 {
+      margin: 0;
+    }
+
+    main {
+      padding: 20px;
+    }
+
+    .subject {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .subject h2 {
+      margin: 0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .topic-list {
+      margin-top: 10px;
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .topic-list li {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .topic-list input {
+      margin-right: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 10px;
+      background: #4caf50;
+      color: white;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>CBSE Class 9 Syllabus Tracker</h1>
+  </header>
+  <main>
+    <div id="subjects"></div>
+  </main>
+  <footer>
+    <p>Made for easy tracking of your progress</p>
+  </footer>
+  <script>
+    const syllabus = {
+      Mathematics: [
+        "Number Systems", "Polynomials", "Coordinate Geometry", 
+        "Linear Equations in Two Variables", "Introduction to Euclid's Geometry", 
+        "Lines and Angles", "Triangles", "Quadrilaterals", "Circles", 
+        "Heron's Formula", "Surface Areas and Volumes", "Statistics"
+      ],
+      Science: {
+        Physics: ["Motion", "Force and Laws of Motion", "Gravitation", "Work and Energy", "Sound"],
+        Chemistry: ["Matter in Our Surroundings", "Is Matter Around Us Pure", "Atoms and Molecules", "Structure of the Atom"],
+        Biology: ["The Fundamental Unit of Life", "Tissues", "Improvement in Food Resources"]
+      },
+      "Social Science": {
+        History: [
+          "The French Revolution", "Socialism in Europe and the Russian Revolution", 
+          "Nazism and the Rise of Hitler", "Forest Society and Colonialism"
+        ],
+        Geography: [
+          "India - Size and Location", "Physical Features of India", "Drainage", 
+          "Climate", "Natural Vegetation and Wildlife", "Population"
+        ],
+        "Political Science": [
+          "What is Democracy? Why Democracy?", "Constitutional Design", 
+          "Electoral Politics", "Working of Institutions", "Democratic Rights"
+        ],
+        Economics: [
+          "The Story of Village Palampur", "People as Resource", 
+          "Poverty as a Challenge", "Food Security in India"
+        ]
+      },
+      English: {
+        Prose: [
+          "The Fun They Had", "The Sound of Music", "The Little Girl", 
+          "A Truly Beautiful Mind", "The Snake and The Mirror", "My Childhood", 
+          "Reach for the Top", "Kathmandu", "If I Were You"
+        ],
+        Poems: [
+          "The Road Not Taken", "Wind", "Rain on the Roof", "The Lake Isle of Innisfree", 
+          "A Legend of the Northland", "No Men Are Foreign", "On Killing a Tree", 
+          "A Slumber Did My Spirit Seal"
+        ]
+      }
+    };
+
+    const subjectsDiv = document.getElementById("subjects");
+
+    function loadProgress() {
+      return JSON.parse(localStorage.getItem("syllabusProgress")) || {};
+    }
+
+    function saveProgress(progress) {
+      localStorage.setItem("syllabusProgress", JSON.stringify(progress));
+    }
+
+    function renderSyllabus() {
+      const progress = loadProgress();
+      subjectsDiv.innerHTML = "";
+
+      Object.keys(syllabus).forEach((subject) => {
+        const subjectDiv = document.createElement("div");
+        subjectDiv.className = "subject";
+
+        const subjectHeader = document.createElement("h2");
+        let completedCount = 0;
+        let totalCount = 0;
+
+        if (Array.isArray(syllabus[subject])) {
+          totalCount = syllabus[subject].length;
+          completedCount = syllabus[subject].filter((topic) => progress[subject]?.[topic]).length;
+        } else {
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            totalCount += syllabus[subject][subsection].length;
+            completedCount += syllabus[subject][subsection].filter(
+              (topic) => progress[subject]?.[subsection]?.[topic]
+            ).length;
+          });
+        }
+
+        subjectHeader.textContent = `${subject} (${completedCount}/${totalCount} completed)`;
+
+        const topicList = document.createElement("ul");
+        topicList.className = "topic-list";
+
+        if (Array.isArray(syllabus[subject])) {
+          syllabus[subject].forEach((topic) => {
+            addTopic(topic, progress, subject, topicList);
+          });
+        } else {
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            const subsectionHeader = document.createElement("li");
+            subsectionHeader.textContent = subsection;
+            subsectionHeader.style.fontWeight = "bold";
+            topicList.appendChild(subsectionHeader);
+            syllabus[subject][subsection].forEach((topic) => {
+              addTopic(topic, progress, subject, topicList, subsection);
+            });
+          });
+        }
+
+        subjectDiv.appendChild(subjectHeader);
+        subjectDiv.appendChild(topicList);
+        subjectsDiv.appendChild(subjectDiv);
+      });
+    }
+
+    function addTopic(topic, progress, subject, topicList, subsection = null) {
+      const topicItem = document.createElement("li");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked =
+        progress[subject]?.[subsection]?.[topic] ||
+        progress[subject]?.[topic] ||
+        false;
+
+      checkbox.addEventListener("change", () => {
+        if (!progress[subject]) progress[subject] = {};
+        if (subsection && !progress[subject][subsection]) progress[subject][subsection] = {};
+        if (subsection) progress[subject][subsection][topic] = checkbox.checked;
+        else progress[subject][topic] = checkbox.checked;
+
+        saveProgress(progress);
+        renderSyllabus();
+      });
+
+      topicItem.appendChild(checkbox);
+      topicItem.appendChild(document.createTextNode(topic));
+      topicList.appendChild(topicItem);
+    }
+
+    renderSyllabus();
+  </script>
+</body>
+</html>
