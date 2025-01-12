@@ -10,9 +10,7 @@
       margin: 0;
       padding: 0;
       background: #f7f9fc;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
+      overflow-x: hidden;
     }
 
     header {
@@ -24,13 +22,11 @@
 
     h1 {
       margin: 0;
+      font-size: 1.5em;
     }
 
     main {
-      flex: 1;
       padding: 20px;
-      box-sizing: border-box;
-      overflow-y: auto;
     }
 
     .subject {
@@ -46,6 +42,7 @@
       margin: 0;
       display: flex;
       justify-content: space-between;
+      font-size: 1.2em;
     }
 
     .topic-list {
@@ -58,6 +55,7 @@
       display: flex;
       align-items: center;
       margin-bottom: 5px;
+      font-size: 1em;
     }
 
     .topic-list input {
@@ -69,6 +67,9 @@
       padding: 10px;
       background: #4caf50;
       color: white;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
     }
 
     #toggle-progress {
@@ -80,6 +81,7 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 1em;
     }
 
     #toggle-progress:hover {
@@ -88,7 +90,7 @@
 
     #progress-container {
       margin: 20px auto;
-      width: 100%;
+      width: 90%;
       text-align: center;
     }
 
@@ -117,7 +119,7 @@
       color: #555;
     }
 
-    /* Responsive styles */
+    /* Responsive styles for different screen sizes */
     @media (min-width: 768px) {
       main {
         max-width: 800px;
@@ -125,13 +127,41 @@
       }
 
       #progress-container {
-        width: 80%;
+        width: 60%;
+      }
+
+      .subject h2 {
+        font-size: 1.5em;
       }
     }
 
     @media (max-width: 767px) {
+      body {
+        padding: 10px;
+      }
+
+      .subject {
+        padding: 10px;
+      }
+
+      .subject h2 {
+        font-size: 1.1em;
+      }
+
       #progress-bar {
         height: 20px;
+      }
+
+      #toggle-progress {
+        font-size: 1em;
+      }
+
+      .topic-list li {
+        font-size: 1.1em;
+      }
+
+      #progress-bar {
+        height: 18px;
       }
     }
 
@@ -146,6 +176,14 @@
 
       #toggle-progress {
         font-size: 14px;
+      }
+
+      .subject h2 {
+        font-size: 1em;
+      }
+
+      .topic-list li {
+        font-size: 1em;
       }
     }
   </style>
@@ -264,98 +302,4 @@
             topicList.appendChild(subsectionHeader);
             syllabus[subject][subsection].forEach((topic) => {
               addTopic(topic, progress, subject, topicList, subsection);
-            });
-          });
-        }
-
-        subjectDiv.appendChild(subjectHeader);
-        subjectDiv.appendChild(topicList);
-        subjectsDiv.appendChild(subjectDiv);
-      });
-    }
-
-    function addTopic(topic, progress, subject, topicList, subsection = null) {
-      const topicItem = document.createElement("li");
-
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked =
-        progress[subject]?.[subsection]?.[topic] ||
-        progress[subject]?.[topic] ||
-        false;
-
-      checkbox.addEventListener("change", () => {
-        updateProgress();
-        if (!progress[subject]) progress[subject] = {};
-        if (subsection && !progress[subject][subsection]) progress[subject][subsection] = {};
-        if (subsection) progress[subject][subsection][topic] = checkbox.checked;
-        else progress[subject][topic] = checkbox.checked;
-
-        saveProgress(progress);
-        renderSyllabus();
-      });
-
-      topicItem.appendChild(checkbox);
-      topicItem.appendChild(document.createTextNode(topic));
-      topicList.appendChild(topicItem);
-    }
-
-    renderSyllabus();
-
-    const motivationalMessages = [
-      "Keep going! You're doing great!",
-      "Success is the sum of small efforts repeated daily.",
-      "Believe in yourself and all that you are.",
-      "You're one step closer to your goals!",
-      "Stay positive, work hard, and make it happen!"
-    ];
-
-    function updateProgress() {
-      renderSyllabus();
-      const progress = loadProgress();
-      let completed = 0;
-      let total = 0;
-
-      Object.keys(syllabus).forEach((subject) => {
-        if (Array.isArray(syllabus[subject])) {
-          total += syllabus[subject].length;
-          completed += syllabus[subject].filter((topic) => progress[subject]?.[topic]).length;
-        } else {
-          Object.keys(syllabus[subject]).forEach((subsection) => {
-            total += syllabus[subject][subsection].length;
-            completed += syllabus[subject][subsection].filter(
-              (topic) => progress[subject]?.[subsection]?.[topic]
-            ).length;
-          });
-        }
-      });
-
-      const percentage = total > 0 ? ((completed / total) * 100).toFixed(2) : 0;
-      const progressFill = document.getElementById("progress-fill");
-      const progressText = document.getElementById("progress-text");
-      const motivation = document.getElementById("motivation");
-
-      progressFill.style.width = `${percentage}%`;
-      progressText.textContent = `${percentage}% completed`;
-      motivation.textContent = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
-
-      if (percentage == 100) {
-        motivation.textContent = "You did it, bro! Congratulations!";
-      }
-    }
-
-    const toggleButton = document.getElementById("toggle-progress");
-    const progressContainer = document.getElementById("progress-container");
-    const footerText = document.getElementById("footer-text");
-
-    toggleButton.addEventListener("click", () => {
-      const isVisible = progressContainer.style.display !== "none";
-      progressContainer.style.display = isVisible ? "none" : "block";
-      footerText.style.display = isVisible ? "none" : "block";
-      toggleButton.textContent = isVisible ? "Show Progress Bar" : "Hide Progress Bar";
-    });
-
-    updateProgress();
-  </script>
-</body>
-</html>
+              
