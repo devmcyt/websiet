@@ -25,6 +25,8 @@
 
     main {
       padding: 20px;
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .subject {
@@ -85,7 +87,7 @@
 
     #progress-container {
       margin: 20px auto;
-      width: 90%;
+      width: 100%;
       text-align: center;
     }
 
@@ -327,7 +329,7 @@
         }
       });
 
-      const percentage = Math.round((completed / total) * 100) || 0;
+      const percentage = total > 0 ? ((completed / total) * 100).toFixed(2) : 0;
       const progressFill = document.getElementById("progress-fill");
       const progressText = document.getElementById("progress-text");
       const motivation = document.getElementById("motivation");
@@ -336,7 +338,7 @@
       progressText.textContent = `${percentage}% completed`;
       motivation.textContent = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
 
-      if (percentage === 100) {
+      if (percentage == 100) {
         motivation.textContent = "You did it, bro! Congratulations!";
       }
     }
