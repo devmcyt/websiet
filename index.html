@@ -166,7 +166,193 @@
     </div>
   </footer>
   <script>
-    // Original script remains unchanged
+    const syllabus = {
+      Mathematics: [
+        "Number Systems", "Polynomials", "Coordinate Geometry", 
+        "Linear Equations in Two Variables", "Introduction to Euclid's Geometry", 
+        "Lines and Angles", "Triangles", "Quadrilaterals", "Circles", 
+        "Heron's Formula", "Surface Areas and Volumes", "Statistics"
+      ],
+      Science: {
+        Physics: ["Motion", "Force and Laws of Motion", "Gravitation", "Work and Energy", "Sound"],
+        Chemistry: ["Matter in Our Surroundings", "Is Matter Around Us Pure", "Atoms and Molecules", "Structure of the Atom"],
+        Biology: ["The Fundamental Unit of Life", "Tissues", "Improvement in Food Resources"]
+      },
+      "Social Science": {
+        History: [
+          "The French Revolution", "Socialism in Europe and the Russian Revolution", 
+          "Nazism and the Rise of Hitler", "Forest Society and Colonialism"
+        ],
+        Geography: [
+          "India - Size and Location", "Physical Features of India", "Drainage", 
+          "Climate", "Natural Vegetation and Wildlife", "Population"
+        ],
+        "Political Science": [
+          "What is Democracy? Why Democracy?", "Constitutional Design", 
+          "Electoral Politics", "Working of Institutions", "Democratic Rights"
+        ],
+        Economics: [
+          "The Story of Village Palampur", "People as Resource", 
+          "Poverty as a Challenge", "Food Security in India"
+        ]
+      },
+      English: {
+        Prose: [
+          "The Fun They Had", "The Sound of Music", "The Little Girl", 
+          "A Truly Beautiful Mind", "The Snake and The Mirror", "My Childhood", 
+          "Reach for the Top", "Kathmandu", "If I Were You"
+        ],
+        Poems: [
+          "The Road Not Taken", "Wind", "Rain on the Roof", "The Lake Isle of Innisfree", 
+          "A Legend of the Northland", "No Men Are Foreign", "On Killing a Tree", 
+          "A Slumber Did My Spirit Seal"
+        ]
+      }
+    };
+
+    const subjectsDiv = document.getElementById("subjects");
+
+    function loadProgress() {
+      return JSON.parse(localStorage.getItem("syllabusProgress")) || {};
+    }
+
+    function saveProgress(progress) {
+      localStorage.setItem("syllabusProgress", JSON.stringify(progress));
+    }
+
+    function renderSyllabus() {
+      const progress = loadProgress();
+      subjectsDiv.innerHTML = "";
+
+      Object.keys(syllabus).forEach((subject) => {
+        const subjectDiv = document.createElement("div");
+        subjectDiv.className = "subject";
+
+        const subjectHeader = document.createElement("h2");
+        let completedCount = 0;
+        let totalCount = 0;
+
+        if (Array.isArray(syllabus[subject])) {
+          totalCount = syllabus[subject].length;
+          completedCount = syllabus[subject].filter((topic) => progress[subject]?.[topic]).length;
+        } else {
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            totalCount += syllabus[subject][subsection].length;
+            completedCount += syllabus[subject][subsection].filter(
+              (topic) => progress[subject]?.[subsection]?.[topic]
+            ).length;
+          });
+        }
+
+        subjectHeader.textContent = `${subject} (${completedCount}/${totalCount} completed)`;
+
+        const topicList = document.createElement("ul");
+        topicList.className = "topic-list";
+
+        if (Array.isArray(syllabus[subject])) {
+          syllabus[subject].forEach((topic) => {
+            addTopic(topic, progress, subject, topicList);
+          });
+        } else {
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            const subsectionHeader = document.createElement("li");
+            subsectionHeader.textContent = subsection;
+            subsectionHeader.style.fontWeight = "bold";
+            topicList.appendChild(subsectionHeader);
+            syllabus[subject][subsection].forEach((topic) => {
+              addTopic(topic, progress, subject, topicList, subsection);
+            });
+          });
+        }
+
+        subjectDiv.appendChild(subjectHeader);
+        subjectDiv.appendChild(topicList);
+        subjectsDiv.appendChild(subjectDiv);
+      });
+    }
+
+    function addTopic(topic, progress, subject, topicList, subsection = null) {
+      const topicItem = document.createElement("li");
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked =
+        progress[subject]?.[subsection]?.[topic] ||
+        progress[subject]?.[topic] ||
+        false;
+
+      checkbox.addEventListener("change", () => {
+        updateProgress();
+        if (!progress[subject]) progress[subject] = {};
+        if (subsection && !progress[subject][subsection]) progress[subject][subsection] = {};
+        if (subsection) progress[subject][subsection][topic] = checkbox.checked;
+        else progress[subject][topic] = checkbox.checked;
+
+        saveProgress(progress);
+        renderSyllabus();
+      });
+
+      topicItem.appendChild(checkbox);
+      topicItem.appendChild(document.createTextNode(topic));
+      topicList.appendChild(topicItem);
+    }
+
+    renderSyllabus();
+
+    const motivationalMessages = [
+      "Keep going! You're doing great!",
+      "Success is the sum of small efforts repeated daily.",
+      "Believe in yourself and all that you are.",
+      "You're one step closer to your goals!",
+      "Stay positive, work hard, and make it happen!"
+    ];
+
+    function updateProgress() {
+      renderSyllabus();
+      const progress = loadProgress();
+      let completed = 0;
+      let total = 0;
+
+      Object.keys(syllabus).forEach((subject) => {
+        if (Array.isArray(syllabus[subject])) {
+          total += syllabus[subject].length;
+          completed += syllabus[subject].filter((topic) => progress[subject]?.[topic]).length;
+        } else {
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            total += syllabus[subject][subsection].length;
+            completed += syllabus[subject][subsection].filter(
+              (topic) => progress[subject]?.[subsection]?.[topic]
+            ).length;
+          });
+        }
+      });
+
+      const percentage = Math.round((completed / total) * 100) || 0;
+      const progressFill = document.getElementById("progress-fill");
+      const progressText = document.getElementById("progress-text");
+      const motivation = document.getElementById("motivation");
+
+      progressFill.style.width = `${percentage}%`;
+      progressText.textContent = `${percentage}% completed`;
+      motivation.textContent = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+
+      if (percentage === 100) {
+        motivation.textContent = "You did it, bro! Congratulations!";
+      }
+    }
+
+    const toggleButton = document.getElementById("toggle-progress");
+    const progressContainer = document.getElementById("progress-container");
+    const footerText = document.getElementById("footer-text");
+
+    toggleButton.addEventListener("click", () => {
+      const isVisible = progressContainer.style.display !== "none";
+      progressContainer.style.display = isVisible ? "none" : "block";
+      footerText.style.display = isVisible ? "none" : "block";
+      toggleButton.textContent = isVisible ? "Show Progress Bar" : "Hide Progress Bar";
+    });
+
+    updateProgress();
   </script>
 </body>
 </html>
