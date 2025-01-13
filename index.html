@@ -10,39 +10,39 @@
       margin: 0;
       padding: 0;
       background: #f7f9fc;
+      height: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
     }
 
     #container {
       width: 100%;
-      max-width: 720px;
+      max-width: 384px;
       height: 100%;
-      max-height: 1280px;
+      max-height: 832px;
       background: #f7f9fc;
       border: 1px solid #ddd;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
     header {
       background: #4caf50;
       color: white;
       text-align: center;
-      padding: 15px;
+      padding: 15px 0;
     }
 
     h1 {
       margin: 0;
-      font-size: 24px;
     }
 
     main {
+      padding: 20px;
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
     }
 
     .subject {
@@ -51,55 +51,81 @@
       background: white;
       border: 1px solid #ddd;
       border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
     .subject h2 {
       margin: 0;
+      display: flex;
+      justify-content: space-between;
     }
 
-    ul {
-      list-style: none;
+    .topic-list {
+      margin-top: 10px;
+      list-style-type: none;
       padding: 0;
-      margin: 10px 0 0 0;
     }
 
-    li {
+    .topic-list li {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 5px;
     }
 
-    li input[type="checkbox"] {
+    .topic-list input {
       margin-right: 10px;
     }
 
     footer {
-      background: #4caf50;
-      color: white;
       text-align: center;
       padding: 10px;
+      background: #4caf50;
+      color: white;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
     }
 
-    #progress-bar-container {
+    #toggle-button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    #progress-container {
+      margin: 20px auto;
       width: 90%;
-      margin: 10px auto;
-      height: 20px;
-      background: #ddd;
+      text-align: center;
+    }
+
+    #progress-bar {
+      background: linear-gradient(90deg, #4caf50, #81c784);
+      height: 25px;
       border-radius: 10px;
       overflow: hidden;
       position: relative;
     }
 
-    #progress-bar {
+    #progress-fill {
       width: 0;
       height: 100%;
-      background: #4caf50;
+      background-color: #2e7d32;
       transition: width 0.5s;
     }
 
-    #progress-percentage {
-      margin-top: 5px;
+    #progress-text {
+      margin: 10px 0;
       font-weight: bold;
+    }
+
+    #motivation {
+      font-style: italic;
+      color: #555;
     }
   </style>
 </head>
@@ -108,12 +134,19 @@
     <header>
       <h1>CBSE Class 9 Syllabus Tracker</h1>
     </header>
-    <main id="subjects-container"></main>
-    <footer>
-      <div id="progress-bar-container">
-        <div id="progress-bar"></div>
+    <main>
+      <div id="subjects"></div>
+    </main>
+    <footer id="footer">
+      <p>Made for easy tracking of your progress</p>
+      <div id="progress-container">
+        <div id="progress-bar">
+          <div id="progress-fill"></div>
+        </div>
+        <p id="progress-text">0% completed</p>
+        <p id="motivation"></p>
       </div>
-      <p id="progress-percentage">0% completed</p>
+      <button id="toggle-button">Hide Progress</button>
     </footer>
   </div>
 
@@ -131,98 +164,177 @@
         Biology: ["The Fundamental Unit of Life", "Tissues", "Improvement in Food Resources"]
       },
       "Social Science": {
-        History: ["The French Revolution", "Socialism in Europe", "Nazism and the Rise of Hitler", "Forest Society and Colonialism"],
-        Geography: ["India - Size and Location", "Physical Features of India", "Drainage", "Climate"],
-        "Political Science": ["What is Democracy?", "Constitutional Design", "Electoral Politics", "Democratic Rights"],
-        Economics: ["Poverty as a Challenge", "Food Security in India"]
+        History: [
+          "The French Revolution", "Socialism in Europe and the Russian Revolution", 
+          "Nazism and the Rise of Hitler", "Forest Society and Colonialism"
+        ],
+        Geography: [
+          "India - Size and Location", "Physical Features of India", "Drainage", 
+          "Climate", "Natural Vegetation and Wildlife", "Population"
+        ],
+        "Political Science": [
+          "What is Democracy? Why Democracy?", "Constitutional Design", 
+          "Electoral Politics", "Working of Institutions", "Democratic Rights"
+        ],
+        Economics: [
+          "The Story of Village Palampur", "People as Resource", 
+          "Poverty as a Challenge", "Food Security in India"
+        ]
       },
       English: {
-        Prose: ["The Fun They Had", "The Sound of Music", "The Little Girl", "A Truly Beautiful Mind"],
-        Poems: ["The Road Not Taken", "Wind", "Rain on the Roof", "No Men Are Foreign"]
+        Prose: [
+          "The Fun They Had", "The Sound of Music", "The Little Girl", 
+          "A Truly Beautiful Mind", "The Snake and The Mirror", "My Childhood", 
+          "Reach for the Top", "Kathmandu", "If I Were You"
+        ],
+        Poems: [
+          "The Road Not Taken", "Wind", "Rain on the Roof", "The Lake Isle of Innisfree", 
+          "A Legend of the Northland", "No Men Are Foreign", "On Killing a Tree", 
+          "A Slumber Did My Spirit Seal"
+        ]
       }
     };
 
-    const progressData = JSON.parse(localStorage.getItem("progressData")) || {};
+    const subjectsDiv = document.getElementById("subjects");
+    const footer = document.getElementById("footer");
+    const toggleButton = document.getElementById("toggle-button");
 
-    const subjectsContainer = document.getElementById("subjects-container");
+    function loadProgress() {
+      return JSON.parse(localStorage.getItem("syllabusProgress")) || {};
+    }
+
+    function saveProgress(progress) {
+      localStorage.setItem("syllabusProgress", JSON.stringify(progress));
+    }
 
     function renderSyllabus() {
-      subjectsContainer.innerHTML = "";
-      let completed = 0;
-      let total = 0;
+      const progress = loadProgress();
+      subjectsDiv.innerHTML = "";
 
-      Object.keys(syllabus).forEach(subject => {
+      Object.keys(syllabus).forEach((subject) => {
         const subjectDiv = document.createElement("div");
         subjectDiv.className = "subject";
 
-        const subjectTitle = document.createElement("h2");
-        subjectTitle.textContent = subject;
-        subjectDiv.appendChild(subjectTitle);
+        const subjectHeader = document.createElement("h2");
+        let completedCount = 0;
+        let totalCount = 0;
+
+        if (Array.isArray(syllabus[subject])) {
+          totalCount = syllabus[subject].length;
+          completedCount = syllabus[subject].filter((topic) => progress[subject]?.[topic]).length;
+        } else {
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            totalCount += syllabus[subject][subsection].length;
+            completedCount += syllabus[subject][subsection].filter(
+              (topic) => progress[subject]?.[subsection]?.[topic]
+            ).length;
+          });
+        }
+
+        subjectHeader.textContent = `${subject} (${completedCount}/${totalCount} completed)`;
 
         const topicList = document.createElement("ul");
+        topicList.className = "topic-list";
+
         if (Array.isArray(syllabus[subject])) {
-          syllabus[subject].forEach(topic => {
-            total++;
-            const topicItem = createTopicItem(subject, null, topic);
-            if (progressData[subject]?.[topic]) completed++;
-            topicList.appendChild(topicItem);
+          syllabus[subject].forEach((topic) => {
+            addTopic(topic, progress, subject, topicList);
           });
         } else {
-          Object.keys(syllabus[subject]).forEach(subsection => {
-            const subsectionTitle = document.createElement("h3");
-            subsectionTitle.textContent = subsection;
-            topicList.appendChild(subsectionTitle);
-
-            syllabus[subject][subsection].forEach(topic => {
-              total++;
-              const topicItem = createTopicItem(subject, subsection, topic);
-              if (progressData[subject]?.[subsection]?.[topic]) completed++;
-              topicList.appendChild(topicItem);
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            const subsectionHeader = document.createElement("li");
+            subsectionHeader.textContent = subsection;
+            subsectionHeader.style.fontWeight = "bold";
+            topicList.appendChild(subsectionHeader);
+            syllabus[subject][subsection].forEach((topic) => {
+              addTopic(topic, progress, subject, topicList, subsection);
             });
           });
         }
 
+        subjectDiv.appendChild(subjectHeader);
         subjectDiv.appendChild(topicList);
-        subjectsContainer.appendChild(subjectDiv);
+        subjectsDiv.appendChild(subjectDiv);
       });
-
-      updateProgress(completed, total);
     }
 
-    function createTopicItem(subject, subsection, topic) {
-      const listItem = document.createElement("li");
+    function addTopic(topic, progress, subject, topicList, subsection = null) {
+      const topicItem = document.createElement("li");
+
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
-      checkbox.checked = subsection 
-        ? progressData[subject]?.[subsection]?.[topic] 
-        : progressData[subject]?.[topic];
+      checkbox.checked =
+        progress[subject]?.[subsection]?.[topic] ||
+        progress[subject]?.[topic] ||
+        false;
 
       checkbox.addEventListener("change", () => {
-        if (!progressData[subject]) progressData[subject] = {};
-        if (subsection && !progressData[subject][subsection]) progressData[subject][subsection] = {};
+        updateProgress();
+        if (!progress[subject]) progress[subject] = {};
+        if (subsection && !progress[subject][subsection]) progress[subject][subsection] = {};
+        if (subsection) progress[subject][subsection][topic] = checkbox.checked;
+        else progress[subject][topic] = checkbox.checked;
 
-        if (subsection) progressData[subject][subsection][topic] = checkbox.checked;
-        else progressData[subject][topic] = checkbox.checked;
-
-        localStorage.setItem("progressData", JSON.stringify(progressData));
+        saveProgress(progress);
         renderSyllabus();
       });
 
-      listItem.appendChild(checkbox);
-      listItem.appendChild(document.createTextNode(topic));
-      return listItem;
-    }
-
-    function updateProgress(completed, total) {
-      const progressBar = document.getElementById("progress-bar");
-      const progressPercentage = document.getElementById("progress-percentage");
-
-      const percentage = total ? Math.round((completed / total) * 100) : 0;
-      progressBar.style.width = `${percentage}%`;
-      progressPercentage.textContent = `${percentage}% completed`;
+      topicItem.appendChild(checkbox);
+      topicItem.appendChild(document.createTextNode(topic));
+      topicList.appendChild(topicItem);
     }
 
     renderSyllabus();
+
+    const motivationalMessages = [
+      "Keep going! You're doing great!",
+      "Success is the sum of small efforts repeated daily.",
+      "Believe in yourself and all that you are.",
+      "You're one step closer to your goals!",
+      "Stay positive, work hard, and make it happen!"
+    ];
+
+    function updateProgress() {
+      const progress = loadProgress();
+      let completed = 0;
+      let total = 0;
+
+      Object.keys(syllabus).forEach((subject) => {
+        if (Array.isArray(syllabus[subject])) {
+          total += syllabus[subject].length;
+          completed += syllabus[subject].filter((topic) => progress[subject]?.[topic]).length;
+        } else {
+          Object.keys(syllabus[subject]).forEach((subsection) => {
+            total += syllabus[subject][subsection].length;
+            completed += syllabus[subject][subsection].filter(
+              (topic) => progress[subject]?.[subsection]?.[topic]
+            ).length;
+          });
+        }
+      });
+
+      const percentage = Math.round((completed / total) * 100) || 0;
+      const progressFill = document.getElementById("progress-fill");
+      const progressText = document.getElementById("progress-text");
+      const motivation = document.getElementById("motivation");
+
+      progressFill.style.width = `${percentage}%`;
+      progressText.textContent = `${percentage}% completed`;
+      motivation.textContent = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
+
+      if (percentage === 100) {
+        motivation.textContent = "You did it, bro! Congratulations!";
+      }
+    }
+
+    toggleButton.addEventListener("click", () => {
+      const isVisible = footer.style.display !== "none";
+      footer.style.display = isVisible ? "none" : "block";
+      toggleButton.textContent = isVisible ? "Show Progress" : "Hide Progress";
+    });
+
+    // Update the progress bar after rendering the syllabus
+    updateProgress();
   </script>
 </body>
 </html>
